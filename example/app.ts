@@ -10,7 +10,7 @@ const app: Denotrodon = new Denotrodon();
  *
  */
 const commandDefault = new Command(function (this: Denotrodon) {
-  console.log(this);
+  console.log("Welcome to Denotrodon!\n");
 })
   .describe("Home screen");
 
