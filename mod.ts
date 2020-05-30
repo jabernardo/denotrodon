@@ -101,7 +101,7 @@ export class Denotrodon {
       }
 
       if (option.required) {
-        console.error(`Expects "${option.name}" as parameter.`);
+        console.error(`Expects "${option.name.yellow()}" as parameter.\n`.red());
         Deno.exit(2);
       }
     });

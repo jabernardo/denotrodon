@@ -18,7 +18,7 @@ const commandDefault = new Command(function (this: Denotrodon) {
  * Stack Parameters
  *
  * @run
- *  deno run .\example\app.ts test -q --name=John -n Aldrich
+ *  deno run .\example\app.ts test -q --name=John -n Aldrich -m "Hello Deno!"
  *
  * @output
  *  { name: [ "John", "Aldrich" ], quiet: true }
@@ -27,6 +27,7 @@ const commandTest = new Command(function (this: Denotrodon) {
   console.log(this.options);
 })
   .describe("Test command")
+  .expects({ name: "msg", flag: "m", desc: "Message" })
   .expects({ name: "name", flag: "n", desc: "User name", type: "array" })
   .optional(
     {
