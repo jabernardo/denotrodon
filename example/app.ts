@@ -18,7 +18,7 @@ const commandDefault = new Command(function (this: Denotrodon) {
  * Stack Parameters
  *
  * @run
- *  deno run .\example\app.ts test -q -n John -n Aldrich
+ *  deno run .\example\app.ts test -q --name=John -n Aldrich
  *
  * @output
  *  { name: [ "John", "Aldrich" ], quiet: true }
