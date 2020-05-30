@@ -65,7 +65,7 @@ export class Denotrodon {
     });
 
     if (typeof opt.val === "undefined") {
-      opt.val = opt.type === "boolean" ? false : opt?.default || undefined;
+      opt.val = opt.type === "boolean" ? opt.default || false : opt.default || undefined;
     }
 
     return opt;
@@ -172,7 +172,7 @@ app.command(
     // console.log("hello", app.has("q"));
   })
     .expects({ name: "name", flag: "n", desc: "User name" })
-    .finds({ name: "quiet", flag: "q", type: "boolean", desc: "Be quiet" })
+    .finds({ name: "quiet", flag: "q", type: "boolean", desc: "Be quiet", default: false })
 );
 
 await app.run();
