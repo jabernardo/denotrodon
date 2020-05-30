@@ -38,7 +38,7 @@ export class Denotrodon {
         if (data) stack.push(data);
       })
     } else {
-      stack.push(origin);
+      if (origin) stack.push(origin);
     }
 
     stack.push(push);
@@ -66,6 +66,12 @@ export class Denotrodon {
         let [str, val] = resOptions;
 
         opt.val = opt.type?.toLowerCase() === "array" ? this._toArray(opt.val, val) : val;
+
+        return true;
+      }
+
+      if (opt.flag === "*") {
+        opt.val = opt.type?.toLowerCase() === "array" ? this._toArray(opt.val, param) : param;
 
         return true;
       }
@@ -225,4 +231,4 @@ export class Command {
 
 export const helpCommand: Command = new Command(function(this: Denotrodon) {
   console.log(this.help);
-});
+}).optional({ name: "cmd", flag: "*", desc: "Command" });
