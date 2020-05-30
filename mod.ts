@@ -123,6 +123,7 @@ export class Denotrodon {
 
   get help(): string {
     let helpScreen = `${this._name.green()} ${this._version}
+by ${this._author.cyan()}
 
 ${Object.keys(this._commands).map(cmd => {
   return `${cmd.padEnd(10).yellow()} ${this._commands[cmd].description}\n`
