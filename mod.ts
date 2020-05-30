@@ -1,4 +1,3 @@
-export type CommandAction = () => any;
 export interface CommandList {
   [key: string]: Command;
 }
@@ -15,23 +14,25 @@ export interface Flags {
   [key: string]: boolean;
 }
 
+export type CommandAction = () => any;
+
 export class Denotrodon {
-  private name: string = "Denotrodon Application";
-  private version: string = "0.1";
-  private author: string = "Unknown";
-  private commandActive: string = "default";
-  private commandDefault: string = "default";
-  private commands: CommandList = {};
-  private arguments: string[] = [];
-  private options: Options = {};
-  private flags: Flags = {};
+  private _name: string = "Denotrodon Application";
+  private _version: string = "0.1";
+  private _author: string = "Unknown";
+  private _commandActive: string = "default";
+  private _commandDefault: string = "default";
+  private _commands: CommandList = {};
+  private _arguments: string[] = [];
+  private _options: Options = {};
+  private _flags: Flags = {};
 
   private _getOptions(): Options {
     const options: Options = {};
     const optionsPattern: RegExp = /^--(\S+)=(.*)/i;
     let tempArgs: string[] = [];
 
-    this.arguments.forEach((param) => {
+    this._arguments.forEach((param) => {
       let results: RegExpExecArray | null = optionsPattern.exec(param);
 
       if (results) {
@@ -45,7 +46,7 @@ export class Denotrodon {
       tempArgs.push(param);
     });
 
-    this.arguments = tempArgs;
+    this._arguments = tempArgs;
 
     return options;
   }
@@ -55,7 +56,7 @@ export class Denotrodon {
     const flagsPattern: RegExp = /^-(\S+)/i;
     let tempArgs: string[] = [];
 
-    this.arguments.forEach((param) => {
+    this._arguments.forEach((param) => {
       let results: RegExpExecArray | null = flagsPattern.exec(param);
 
       if (results) {
@@ -69,13 +70,13 @@ export class Denotrodon {
       tempArgs.push(param);
     });
 
-    this.arguments = tempArgs;
+    this._arguments = tempArgs;
 
     return flags;
   }
 
   private async _runActive(): Promise<void> {
-    const command = this.commands[this.commandActive];
+    const command = this._commands[this._commandActive];
 
     if (command) {
       await command.exec(this);
@@ -83,36 +84,44 @@ export class Denotrodon {
   }
 
   public has(flagName: string, defaultVal: boolean = false): boolean {
-    return this.flags[flagName] || defaultVal;
+    return this._flags[flagName] || defaultVal;
   }
 
   public option(optionName: string, defaultVal: any = null): any {
-    return this.options[optionName] || defaultVal;
+    return this._options[optionName] || defaultVal;
+  }
+
+  get options(): Options {
+    return this._options;
+  }
+
+  get flags(): Flags {
+    return this._flags;
   }
 
   run() {
-    this.arguments = Array.from(Deno.args);
-    this.commandActive = this.commandDefault;
+    this._arguments = Array.from(Deno.args);
+    this._commandActive = this._commandDefault;
 
-    if (this.arguments.length && this.commands[this.arguments[0]]) {
-      this.commandActive = this.arguments[0];
-      this.arguments.shift();
+    if (this._arguments.length && this._commands[this._arguments[0]]) {
+      this._commandActive = this._arguments[0];
+      this._arguments.shift();
     }
 
-    this.options = this._getOptions();
-    this.flags = this._getFlags();
+    this._options = this._getOptions();
+    this._flags = this._getFlags();
 
-    console.log(this.commandActive, this.arguments, this.options, this.flags);
+    // console.log(this.commandActive, this.arguments, this.options, this.flags);
 
     this._runActive();
   }
 
   command(name: string, c: Command) {
-    if (this.commands[name.toLowerCase()]) {
+    if (this._commands[name.toLowerCase()]) {
       throw new Error("Command already exists.");
     }
 
-    this.commands[name] = c;
+    this._commands[name] = c;
   }
 }
 
@@ -129,7 +138,7 @@ export class Command {
     return this;
   }
 
-  private checkExpectations(app: Denotrodon) {
+  private checkExpectations(options: Options) {
     this.optionsExpected.forEach((option) => {
       Object.keys(option).forEach((key) => {
         if (!app.option(key)) {
@@ -141,9 +150,9 @@ export class Command {
   }
 
   async exec(app: Denotrodon) {
-    this.checkExpectations(app);
+    this.checkExpectations(app.options);
 
-    await this.action();
+    await this.action.bind(app)();
   }
 }
 
@@ -151,13 +160,11 @@ const app: Denotrodon = new Denotrodon();
 
 app.command(
   "test",
-  new Command(function() {
-    console.log("hello", app.has("q"));
+  new Command(function(this: Denotrodon) {
+    console.log(this.options);
+    // console.log("hello", app.has("q"));
   })
     .expects({ "name": "Username", "age": "Age" }),
 );
 
 app.run();
-
-
-console.log(app);
