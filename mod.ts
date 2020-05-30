@@ -3,15 +3,18 @@ export interface CommandList {
 }
 
 export interface Option {
-  [name: string]: string;
+  name: string;
+  desc?: string;
+  val?: any;
+  flag?: string;
+  default?: any;
+  type?: string;
+  stack?: boolean;
+  required?: boolean;
 }
 
-export interface Options {
-  [key: string]: string;
-}
-
-export interface Flags {
-  [key: string]: boolean;
+export interface OptionValue {
+  [n: string]: any;
 }
 
 export type CommandAction = () => any;
@@ -24,55 +27,71 @@ export class Denotrodon {
   private _commandDefault: string = "default";
   private _commands: CommandList = {};
   private _arguments: string[] = [];
-  private _options: Options = {};
-  private _flags: Flags = {};
+  private _options: OptionValue = {};
 
-  private _getOptions(): Options {
-    const options: Options = {};
-    const optionsPattern: RegExp = /^--(\S+)=(.*)/i;
-    let tempArgs: string[] = [];
+  private _inArgs(opt: Option): Option {
+    const optionsPattern: RegExp = new RegExp(`^--${opt.name}=(.*)`);
+    const flagsPattern: RegExp = new RegExp(`^-${opt?.flag || ""}`);
+
+    let flagActive: Option | null = null;
 
     this._arguments.forEach((param) => {
-      let results: RegExpExecArray | null = optionsPattern.exec(param);
-
-      if (results) {
-        let [str, key, val] = results;
-
-        options[key.toLowerCase()] = val;
-
+      if (flagActive) {
+        flagActive.val = param;
+        flagActive = null;
         return true;
       }
 
-      tempArgs.push(param);
+      let resOptions: RegExpExecArray | null = optionsPattern.exec(param);
+
+      if (resOptions) {
+        let [str, val] = resOptions;
+
+        opt.val = val;
+        return true;
+      }
+
+      let resFlag: RegExpExecArray | null = flagsPattern.exec(param);
+
+      if (resFlag && opt.type === "boolean") {
+        opt.val = true;
+        return true;
+      }
+
+      if (resFlag) {
+        flagActive = opt;
+        return true;
+      }
     });
 
-    this._arguments = tempArgs;
+    if (typeof opt.val === "undefined") {
+      opt.val = opt.type === "boolean" ? false : opt?.default || undefined;
+    }
 
-    return options;
+    return opt;
   }
 
-  private _getFlags(): Flags {
-    const flags: Flags = {};
-    const flagsPattern: RegExp = /^-(\S+)/i;
-    let tempArgs: string[] = [];
+  private _parseArgs(configuredOptions: Option[]) {
+    configuredOptions.forEach(param => {
+      let option: Option = this._inArgs(param);
 
-    this._arguments.forEach((param) => {
-      let results: RegExpExecArray | null = flagsPattern.exec(param);
-
-      if (results) {
-        let [str, val] = results;
-
-        flags[val] = true;
+      if (typeof option.val !== "undefined") {
+        this._options[option.name] = option.val;
 
         return true;
       }
 
-      tempArgs.push(param);
+      if (option.required) {
+        console.error(`Expects "${option.name}" as parameter.`);
+        Deno.exit(2);
+      }
     });
+  }
 
-    this._arguments = tempArgs;
+  read(configuredOptions: Option[]): Denotrodon {
+    this._parseArgs(configuredOptions);
 
-    return flags;
+    return this;
   }
 
   private async _runActive(): Promise<void> {
@@ -83,23 +102,15 @@ export class Denotrodon {
     }
   }
 
-  public has(flagName: string, defaultVal: boolean = false): boolean {
-    return this._flags[flagName] || defaultVal;
-  }
+  // public option(optionName: string, defaultVal: any = null): any {
+  //   return this._options[optionName] || defaultVal;
+  // }
 
-  public option(optionName: string, defaultVal: any = null): any {
-    return this._options[optionName] || defaultVal;
-  }
-
-  get options(): Options {
+  get options(): OptionValue {
     return this._options;
   }
 
-  get flags(): Flags {
-    return this._flags;
-  }
-
-  run() {
+  async run() {
     this._arguments = Array.from(Deno.args);
     this._commandActive = this._commandDefault;
 
@@ -108,12 +119,12 @@ export class Denotrodon {
       this._arguments.shift();
     }
 
-    this._options = this._getOptions();
-    this._flags = this._getFlags();
+    // this._options = this._parseArgs();
+    // this._flags = this._getFlags();
 
     // console.log(this.commandActive, this.arguments, this.options, this.flags);
 
-    this._runActive();
+    await this._runActive();
   }
 
   command(name: string, c: Command) {
@@ -134,25 +145,21 @@ export class Command {
   }
 
   expects(option: Option): Command {
+    option.required = true;
+
     this.optionsExpected.push(option);
     return this;
   }
 
-  private checkExpectations(options: Options) {
-    this.optionsExpected.forEach((option) => {
-      Object.keys(option).forEach((key) => {
-        if (!app.option(key)) {
-          console.error(`Option "${key}" as "${option[key]}" expected.`);
-          Deno.exit(2);
-        }
-      });
-    });
+  finds(option: Option): Command {
+    option.required = false;
+
+    this.optionsExpected.push(option);
+    return this;
   }
 
   async exec(app: Denotrodon) {
-    this.checkExpectations(app.options);
-
-    await this.action.bind(app)();
+    await this.action.bind(app.read(this.optionsExpected))();
   }
 }
 
@@ -164,7 +171,8 @@ app.command(
     console.log(this.options);
     // console.log("hello", app.has("q"));
   })
-    .expects({ "name": "Username", "age": "Age" }),
+    .expects({ name: "name", flag: "n", desc: "User name" })
+    .finds({ name: "quiet", flag: "q", type: "boolean", desc: "Be quiet" })
 );
 
-app.run();
+await app.run();
