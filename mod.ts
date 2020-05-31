@@ -30,13 +30,23 @@ export class Denotrodon {
   private _arguments: string[] = [];
   private _options: OptionValue = {};
 
+  constructor(
+    name: string = "Denotrodon Application",
+    version: string = "0.1",
+    author: string = "Unknown",
+  ) {
+    this._name = name;
+    this._version = version;
+    this._author = author;
+  }
+
   private _toArray(origin: string | string[], push: string): string[] {
     const stack = [];
 
     if (Array.isArray(origin)) {
-      origin.forEach(data => {
+      origin.forEach((data) => {
         if (data) stack.push(data);
-      })
+      });
     } else {
       if (origin) stack.push(origin);
     }
@@ -54,7 +64,9 @@ export class Denotrodon {
 
     this._arguments.forEach((param) => {
       if (flagActive?.name) {
-        flagActive.val = flagActive.type?.toLowerCase() === "array" ? this._toArray(flagActive.val, param) : param;
+        flagActive.val = flagActive.type?.toLowerCase() === "array"
+          ? this._toArray(flagActive.val, param)
+          : param;
         flagActive = null;
 
         return true;
@@ -65,13 +77,17 @@ export class Denotrodon {
       if (resOptions) {
         let [str, val] = resOptions;
 
-        opt.val = opt.type?.toLowerCase() === "array" ? this._toArray(opt.val, val) : val;
+        opt.val = opt.type?.toLowerCase() === "array"
+          ? this._toArray(opt.val, val)
+          : val;
 
         return true;
       }
 
       if (opt.flag === "*") {
-        opt.val = opt.type?.toLowerCase() === "array" ? this._toArray(opt.val, param) : param;
+        opt.val = opt.type?.toLowerCase() === "array"
+          ? this._toArray(opt.val, param)
+          : param;
 
         return true;
       }
@@ -90,14 +106,16 @@ export class Denotrodon {
     });
 
     if (typeof opt.val === "undefined") {
-      opt.val = opt.type?.toLowerCase() === "boolean" ? opt.default || false : opt.default || undefined;
+      opt.val = opt.type?.toLowerCase() === "boolean"
+        ? opt.default || false
+        : opt.default || undefined;
     }
 
     return opt;
   }
 
   private _parseArgs(configuredOptions: Option[]) {
-    configuredOptions.forEach(param => {
+    configuredOptions.forEach((param) => {
       let option: Option = this._inArgs(param);
 
       if (typeof option.val !== "undefined") {
@@ -107,7 +125,9 @@ export class Denotrodon {
       }
 
       if (option.required) {
-        console.error(`Expects "${option.name.yellow()}" as parameter.\n`.red());
+        console.error(
+          `Expects "${option.name.yellow()}" as parameter.\n`.red(),
+        );
         Deno.exit(2);
       }
     });
@@ -120,7 +140,8 @@ export class Denotrodon {
   }
 
   private async _runActive(): Promise<void> {
-    const command = this._commands[this._commandActive] || this._commands["help"];
+    const command = this._commands[this._commandActive] ||
+      this._commands["help"];
 
     if (command) {
       await command.exec(this);
@@ -131,9 +152,13 @@ export class Denotrodon {
     let helpScreen = `${this._name.green()} ${this._version}
 by ${this._author.cyan()}
 
-${Object.keys(this._commands).map(cmd => {
-  return `${cmd.padEnd(10).yellow()} ${this._commands[cmd].description}\n`
-}).join("")}
+${
+      Object.keys(this._commands).map((cmd) => {
+        return `${cmd.padEnd(10).yellow()} ${
+          this._commands[cmd].description
+        }\n`;
+      }).join("")
+    }
     `;
 
     return helpScreen;
@@ -187,11 +212,17 @@ export class Command {
   }
 
   get help(): string {
-    return `${this.description.yellow()}\n\n` + this._options.map(option => {
-      let commandName = (option.flag !== "*" ? `--${option.name}` : `${option.name}...`).padEnd(10).green();
-      let commandFlg = option.flag !== "*" ?`-${(option.flag || "").padEnd(8).green()}` : "";
+    return `${this.description.yellow()}\n\n` + this._options.map((option) => {
+      let commandName = (option.flag !== "*"
+        ? `--${option.name}`
+        : `${option.name}...`).padEnd(10).green();
+      let commandFlg = option.flag !== "*"
+        ? `-${(option.flag || "").padEnd(8).green()}`
+        : "";
       let commandDesc = option.desc || "";
-      let commandRequired = option.required ? "(Required)".red() : "";
+      let commandRequired = option.required
+        ? "(Required)".red()
+        : "";
 
       return `${commandName} ${commandFlg} ${commandDesc} ${commandRequired}\n`;
     }).join("");
@@ -209,7 +240,7 @@ export class Command {
 
   expects(option: Option | Option[]): Command {
     if (Array.isArray(option)) {
-      option.forEach(opt => {
+      option.forEach((opt) => {
         opt.required = true;
         this._options.push(opt);
       });
@@ -225,8 +256,8 @@ export class Command {
 
   optional(option: Option): Command {
     if (Array.isArray(option)) {
-      option.forEach(opt => {
-      opt.required = false;
+      option.forEach((opt) => {
+        opt.required = false;
         this._options.push(opt);
       });
 
@@ -244,14 +275,16 @@ export class Command {
   }
 }
 
-export const helpCommand: Command = new Command(function(this: Denotrodon) {
+export const helpCommand: Command = new Command(function (this: Denotrodon) {
   if (this.options?.cmd) {
     let command = this.commands[this.options.cmd];
 
     if (command) {
       console.log(command.help);
     } else {
-      console.error(`Command "${this.options.cmd.yellow()}" not found.\n`.red());
+      console.error(
+        `Command "${this.options.cmd.yellow()}" not found.\n`.red(),
+      );
     }
 
     return true;
