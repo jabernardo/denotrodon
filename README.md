@@ -42,6 +42,8 @@ await app.run();
 
 ## TODO
 
-- [ ] Default command
-- [ ] Extra arguments check
-- [ ] Help generator for specific command `app help command`
+- [/] Default command
+- [/] Extra arguments check
+- [/] Help generator for specific command `app help command`
+- [ ] Clean-up
+- [ ] Test files

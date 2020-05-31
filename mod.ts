@@ -127,7 +127,7 @@ export class Denotrodon {
     }
   }
 
-  get help(): string {
+  help(cmd?: string): string {
     let helpScreen = `${this._name.green()} ${this._version}
 by ${this._author.cyan()}
 
@@ -167,6 +167,10 @@ ${Object.keys(this._commands).map(cmd => {
 
     this._commands[name] = c;
   }
+
+  get commands(): CommandList {
+    return this._commands;
+  }
 }
 
 export class Command {
@@ -180,6 +184,17 @@ export class Command {
 
   get options(): Option[] {
     return this._options;
+  }
+
+  get help(): string {
+    return `${this.description.yellow()}\n\n` + this._options.map(option => {
+      let commandName = `--${option.name.padEnd(10).green()}`;
+      let commandFlg = `-${(option.flag || "").padEnd(8).green()}`;
+      let commandDesc = option.desc || "";
+      let commandRequired = option.required ? "(Required)".red() : "";
+
+      return `${commandName} ${commandFlg} ${commandDesc} ${commandRequired}\n`;
+    }).join("");
   }
 
   describe(info: string): Command {
@@ -211,7 +226,7 @@ export class Command {
   optional(option: Option): Command {
     if (Array.isArray(option)) {
       option.forEach(opt => {
-        opt.required = false;
+      opt.required = false;
         this._options.push(opt);
       });
 
@@ -230,5 +245,18 @@ export class Command {
 }
 
 export const helpCommand: Command = new Command(function(this: Denotrodon) {
-  console.log(this.help);
+  if (this.options?.cmd) {
+    let command = this.commands[this.options.cmd];
+
+    if (command) {
+      console.log(command.help);
+    } else {
+      console.error(`Command "${this.options.cmd.yellow()}" not found.\n`.red());
+    }
+
+    return true;
+  }
+
+  console.log(this.help());
+  return true;
 }).optional({ name: "cmd", flag: "*", desc: "Command" });
