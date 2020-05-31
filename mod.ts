@@ -188,8 +188,8 @@ export class Command {
 
   get help(): string {
     return `${this.description.yellow()}\n\n` + this._options.map(option => {
-      let commandName = `--${option.name.padEnd(10).green()}`;
-      let commandFlg = `-${(option.flag || "").padEnd(8).green()}`;
+      let commandName = (option.flag !== "*" ? `--${option.name}` : `${option.name}...`).padEnd(10).green();
+      let commandFlg = option.flag !== "*" ?`-${(option.flag || "").padEnd(8).green()}` : "";
       let commandDesc = option.desc || "";
       let commandRequired = option.required ? "(Required)".red() : "";
 
