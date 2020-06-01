@@ -5,6 +5,8 @@ const app: Denotrodon = new Denotrodon();
 /**
  * Default command
  *
+ * @type {Command}
+ *
  * @run
  *  deno run .\example\app.ts test -q -n John -n Aldrich
  *
@@ -16,6 +18,8 @@ const commandDefault = new Command(function (this: Denotrodon) {
 
 /**
  * Stack Parameters
+ *
+ * @type {Command}
  *
  * @run
  *  deno run .\example\app.ts test -q --name=John -n Aldrich -m "Hello Deno!"
@@ -39,7 +43,29 @@ const commandTest = new Command(function (this: Denotrodon) {
     },
   );
 
+/**
+ * Async Test Command
+ *
+ * @type {Command}
+ *
+ * @run
+ *  deno run --allow-net .\example\app.ts async
+ *
+ * @output
+ *  {...}
+ *
+ */
+const commandAsync = new Command(async function (this: Denotrodon) {
+  let data = await fetch(
+    "https://hacker-news.firebaseio.com/v0/item/2921983.json?print=pretty",
+  );
+  let json = await data.json();
+  console.log(json);
+})
+  .describe("Async test");
+
 app.command("default", commandDefault);
 app.command("test", commandTest);
+app.command("async", commandAsync);
 
 await app.run();

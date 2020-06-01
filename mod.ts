@@ -1,4 +1,4 @@
-import "https://deno.land/x/strcolors.ts@0.1/mod.ts";
+import "./deps.ts";
 
 export interface CommandList {
   [key: string]: Command;
@@ -18,7 +18,10 @@ export interface OptionValue {
   [n: string]: any;
 }
 
-export type CommandAction = () => any;
+/**
+ * Command Action
+ */
+export type Action = () => any;
 
 export class Denotrodon {
   private _name: string = "Denotrodon Application";
@@ -30,6 +33,13 @@ export class Denotrodon {
   private _arguments: string[] = [];
   private _options: OptionValue = {};
 
+  /**
+   * New Denotrodon Application
+   *
+   * @param {string}  name    Application name
+   * @param {string}  version Version
+   * @param {string}  author  Author
+   */
   constructor(
     name: string = "Denotrodon Application",
     version: string = "0.1",
@@ -40,7 +50,14 @@ export class Denotrodon {
     this._author = author;
   }
 
-  private _toArray(origin: string | string[], push: string): string[] {
+  /**
+   * Stack items to array
+   *
+   * @param   {string|string[]}   origin  Stack
+   * @param   {string}            push    Hay
+   * @return  {string[]}          New stack
+   */
+  private _stack(origin: string | string[], push: string): string[] {
     const stack = [];
 
     if (Array.isArray(origin)) {
@@ -56,6 +73,12 @@ export class Denotrodon {
     return stack;
   }
 
+  /**
+   * Check if option is in arguments
+   *
+   * @param   {Option}  opt Option
+   * @return  {Option}  Detailed Option
+   */
   private _inArgs(opt: Option): Option {
     const optionsPattern: RegExp = new RegExp(`^--${opt.name}=(.*)`);
     const flagsPattern: RegExp = new RegExp(`^-${opt?.flag || ""}`);
@@ -65,7 +88,7 @@ export class Denotrodon {
     this._arguments.forEach((param) => {
       if (flagActive?.name) {
         flagActive.val = flagActive.type?.toLowerCase() === "array"
-          ? this._toArray(flagActive.val, param)
+          ? this._stack(flagActive.val, param)
           : param;
         flagActive = null;
 
@@ -78,7 +101,7 @@ export class Denotrodon {
         let [str, val] = resOptions;
 
         opt.val = opt.type?.toLowerCase() === "array"
-          ? this._toArray(opt.val, val)
+          ? this._stack(opt.val, val)
           : val;
 
         return true;
@@ -86,7 +109,7 @@ export class Denotrodon {
 
       if (opt.flag === "*") {
         opt.val = opt.type?.toLowerCase() === "array"
-          ? this._toArray(opt.val, param)
+          ? this._stack(opt.val, param)
           : param;
 
         return true;
@@ -114,7 +137,28 @@ export class Denotrodon {
     return opt;
   }
 
-  private _parseArgs(configuredOptions: Option[]) {
+  /**
+   * Run active command
+   *
+   * @return {Promise<void>}
+   *
+   */
+  private async _runActive(): Promise<void> {
+    const command = this._commands[this._commandActive] ||
+      this._commands["help"];
+
+    if (command) {
+      await command.exec(this);
+    }
+  }
+
+  /**
+   * Parse configured arguments
+   *
+   * @param   {option[]}  configuredOptions Configured options
+   * @return  {void}
+   */
+  read(configuredOptions: Option[]): Denotrodon {
     configuredOptions.forEach((param) => {
       let option: Option = this._inArgs(param);
 
@@ -131,23 +175,17 @@ export class Denotrodon {
         Deno.exit(2);
       }
     });
-  }
-
-  read(configuredOptions: Option[]): Denotrodon {
-    this._parseArgs(configuredOptions);
 
     return this;
   }
 
-  private async _runActive(): Promise<void> {
-    const command = this._commands[this._commandActive] ||
-      this._commands["help"];
-
-    if (command) {
-      await command.exec(this);
-    }
-  }
-
+  /**
+   * Help String
+   *
+   * @param   {string}  cmd   Command
+   * @return  {string}
+   *
+   */
   help(cmd?: string): string {
     let helpScreen = `${this._name.green()} ${this._version}
 by ${this._author.cyan()}
@@ -164,10 +202,21 @@ ${
     return helpScreen;
   }
 
+  /**
+   * Get options
+   *
+   * @return {OptionValue}
+   */
   get options(): OptionValue {
     return this._options;
   }
 
+  /**
+   * Run application
+   *
+   * @return  {void}
+   *
+   */
   async run() {
     this._arguments = Array.from(Deno.args);
     this._commandActive = this._commandDefault;
@@ -185,6 +234,14 @@ ${
     await this._runActive();
   }
 
+  /**
+   * Add command
+   *
+   * @param   {string}  name  Command name
+   * @param   {Command} c     Command Action
+   * @return  {void}
+   *
+   */
   command(name: string, c: Command) {
     if (this._commands[name.toLowerCase()]) {
       throw new Error("Command already exists.");
@@ -193,6 +250,12 @@ ${
     this._commands[name] = c;
   }
 
+  /**
+   * Get commands
+   *
+   * @return {CommandList}
+   *
+   */
   get commands(): CommandList {
     return this._commands;
   }
@@ -200,17 +263,33 @@ ${
 
 export class Command {
   private _options: Option[] = [];
-  private _action: CommandAction;
+  private _action: Action;
   private _description: string = "";
 
-  constructor(action: CommandAction) {
+  /**
+   * New command
+   *
+   * @param {Action}  action  Command action
+   */
+  constructor(action: Action) {
     this._action = action;
   }
 
+  /**
+   * Get options
+   *
+   * @return  {Option[]}
+   */
   get options(): Option[] {
     return this._options;
   }
 
+  /**
+   * Get command specific help
+   *
+   * @return   {string}
+   *
+   */
   get help(): string {
     return `${this.description.yellow()}\n\n` + this._options.map((option) => {
       let commandName = (option.flag !== "*"
@@ -228,16 +307,35 @@ export class Command {
     }).join("");
   }
 
+  /**
+   * Describe command
+   *
+   * @param   {string}  info  Command description
+   * @return  {Command} Command instance
+   *
+   */
   describe(info: string): Command {
     this._description = info;
 
     return this;
   }
 
+  /**
+   * Get command description
+   *
+   * @return {string}
+   *
+   */
   get description(): string {
     return this._description;
   }
 
+  /**
+   * Add expected options
+   *
+   * @param   {Option|Option[]}  option   Option(s) to be added
+   * @return  {Command} Command instance
+   */
   expects(option: Option | Option[]): Command {
     if (Array.isArray(option)) {
       option.forEach((opt) => {
@@ -254,7 +352,12 @@ export class Command {
     return this;
   }
 
-  optional(option: Option): Command {
+  /**
+   * Add optional options
+   *
+   * @param {Option|Option[]}  option   Option(s) to be added
+   */
+  optional(option: Option | Option[]): Command {
     if (Array.isArray(option)) {
       option.forEach((opt) => {
         opt.required = false;
@@ -270,11 +373,23 @@ export class Command {
     return this;
   }
 
+  /**
+   * Execute command
+   *
+   * @param   {Denotrodon}  app Parent application
+   * @return  {void}
+   */
   async exec(app: Denotrodon) {
     await this._action.bind(app.read(this._options))();
   }
 }
 
+/**
+ * Help Command
+ *
+ * @type  {Command}
+ *
+ */
 export const helpCommand: Command = new Command(function (this: Denotrodon) {
   if (this.options?.cmd) {
     let command = this.commands[this.options.cmd];

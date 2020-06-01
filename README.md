@@ -40,10 +40,37 @@ await app.run();
 
 ```
 
+## Auto Generated Help Screen
+
+### Top Level Help
+```sh
+$ deno run ./example/app.ts help
+
+Denotrodon Application 0.1
+by Unknown
+
+default    Home screen
+test       Test command
+async      Async test
+help
+```
+
+### Command Specific Help
+```sh
+$ deno run --allow-net ./example/app.ts help test
+
+Test command
+
+--msg      -m        Message (Required)
+--name     -n        User name (Required)
+--quiet    -q        Be quiet
+```
+
 ## TODO
 
 - [/] Default command
 - [/] Extra arguments check
 - [/] Help generator for specific command `app help command`
-- [ ] Clean-up
+- [/] Clean-up
+- [ ] Command completion on Bash
 - [ ] Test files
