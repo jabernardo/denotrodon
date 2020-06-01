@@ -68,9 +68,9 @@ Test command
 
 ## TODO
 
-- [/] Default command
-- [/] Extra arguments check
-- [/] Help generator for specific command `app help command`
-- [/] Clean-up
+- [x] Default command
+- [x] Extra arguments check
+- [x] Help generator for specific command `app help command`
+- [x] Clean-up
 - [ ] Command completion on Bash
 - [ ] Test files
