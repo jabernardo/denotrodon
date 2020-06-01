@@ -78,6 +78,7 @@ We have few examples provided, that could be found [here](https://github.com/jab
 - [x] Extra arguments check
 - [x] Help generator for specific command `app help command`
 - [x] Clean-up
+- [ ] Example for command
 - [ ] Command completion on Bash
 - [ ] Test files
 
