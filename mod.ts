@@ -159,6 +159,8 @@ export class Denotrodon {
    * @return  {void}
    */
   read(configuredOptions: Option[]): Denotrodon {
+    this._options = {};
+
     configuredOptions.forEach((param) => {
       let option: Option = this._inArgs(param);
 
