@@ -107,6 +107,8 @@ export class Denotrodon {
         return true;
       }
 
+      if (!opt?.flag) return false;
+
       if (opt.flag === "*") {
         opt.val = opt.type?.toLowerCase() === "array"
           ? this._stack(opt.val, param)
