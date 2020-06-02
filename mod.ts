@@ -384,7 +384,7 @@ export class Command {
    * @return  {void}
    */
   async exec(app: Denotrodon) {
-    await this._action.bind(app.read(this._options))();
+    return await this._action.bind(app.read(this._options))();
   }
 }
 
