@@ -1,4 +1,4 @@
-import { Denotrodon, Command } from "../mod.ts";
+import { Denotrodon, Command } from "https://deno.land/x/denotrodon/mod.ts";
 
 const app: Denotrodon = new Denotrodon();
 

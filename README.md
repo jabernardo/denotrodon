@@ -2,6 +2,14 @@
 
 Bare Minimum Command-Line (CLI) Application Skeleton
 
+## Usage
+
+```ts
+
+import { Denotrodon, Command } from "https://deno.land/x/denotrodon/mod.ts";
+
+```
+
 ## Example
 
 ```ts
