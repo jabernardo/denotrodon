@@ -86,10 +86,9 @@ We have few examples provided, that could be found [here](https://github.com/jab
 - [x] Extra arguments check
 - [x] Help generator for specific command `app help command`
 - [x] Clean-up
-- [ ] Example for command
+- [x] Example for command
+- [x] Test files
 - [ ] Command completion on Bash
-- [ ] Test files
-
 
 ## Contibuting to Denotrodon!
 To contribute to Denotrodon! Make sure to give a star and forked this repository.

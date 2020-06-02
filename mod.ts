@@ -155,6 +155,36 @@ export class Denotrodon {
   }
 
   /**
+   * Get application name
+   *
+   * @return {string}
+   *
+   */
+  get name(): string {
+    return this._name;
+  }
+
+  /**
+   * Get application version
+   *
+   * @return {string}
+   *
+   */
+  get version(): string {
+    return this._version;
+  }
+
+  /**
+   * Get application author
+   *
+   * @return {string}
+   *
+   */
+  get author(): string {
+    return this._author;
+  }
+
+  /**
    * Parse configured arguments
    *
    * @param   {option[]}  configuredOptions Configured options
