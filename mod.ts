@@ -85,14 +85,16 @@ export class Denotrodon {
 
     let flagActive: Option | null = null;
 
-    this._arguments.forEach((param) => {
+    this._arguments = this._arguments.filter((param) => {
+      if (opt.val && opt?.type !== "array" ) return true;
+
       if (flagActive?.name) {
         flagActive.val = flagActive.type?.toLowerCase() === "array"
           ? this._stack(flagActive.val, param)
           : param;
         flagActive = null;
 
-        return true;
+        return false;
       }
 
       let resOptions: RegExpExecArray | null = optionsPattern.exec(param);
@@ -104,7 +106,7 @@ export class Denotrodon {
           ? this._stack(opt.val, val)
           : val;
 
-        return true;
+        return false;
       }
 
       if (!opt?.flag) return false;
@@ -114,20 +116,23 @@ export class Denotrodon {
           ? this._stack(opt.val, param)
           : param;
 
-        return true;
+        return false;
       }
 
       let resFlag: RegExpExecArray | null = flagsPattern.exec(param);
 
       if (resFlag && opt.type?.toLowerCase() === "boolean") {
         opt.val = true;
-        return true;
+        return false;
       }
 
-      if (resFlag) {
+      if (resFlag && opt.flag !== "*") {
         flagActive = opt;
-        return true;
+
+        return false;
       }
+
+      return true;
     });
 
     if (typeof opt.val === "undefined") {
