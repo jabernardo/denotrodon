@@ -9,6 +9,7 @@ export interface Option {
   desc?: string;
   val?: any;
   flag?: string;
+  positional?: boolean;
   default?: any;
   type?: string;
   required?: boolean;
@@ -109,15 +110,15 @@ export class Denotrodon {
         return false;
       }
 
-      if (!opt?.flag) return false;
-
-      if (opt.flag === "*") {
+      if (opt.positional) {
         opt.val = opt.type?.toLowerCase() === "array"
           ? this._stack(opt.val, param)
           : param;
 
         return false;
       }
+
+      if (!opt?.flag) return false;
 
       let resFlag: RegExpExecArray | null = flagsPattern.exec(param);
 
@@ -126,7 +127,7 @@ export class Denotrodon {
         return false;
       }
 
-      if (resFlag && opt.flag !== "*") {
+      if (resFlag) {
         flagActive = opt;
 
         return false;
@@ -331,10 +332,10 @@ export class Command {
    */
   get help(): string {
     return `${this.description.yellow()}\n\n` + this._options.map((option) => {
-      let commandName = (option.flag !== "*"
+      let commandName = (!option.positional
         ? `--${option.name}`
         : `${option.name}...`).padEnd(10).green();
-      let commandFlg = option.flag !== "*"
+      let commandFlg = !option.positional
         ? `-${(option.flag || "").padEnd(8).green()}`
         : "";
       let commandDesc = option.desc || "";
@@ -444,6 +445,6 @@ export const helpCommand: Command = new Command(function (this: Denotrodon) {
     return true;
   }
 
-  console.log(this.help());
+  console.log(this.help(), this.options);
   return true;
-}).optional({ name: "cmd", flag: "*", desc: "Command" });
+}).optional({ name: "cmd", positional: true, desc: "Command" });
